@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "u-device-emulator"
+version = "0.1.0"
+description = "Reusable network device emulation library and YAML-driven daemon"
+requires-python = ">=3.10"
+dependencies = [
+    "pycryptodome>=3.19",
+    "paramiko>=3.3",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+]
+
+[project.scripts]
+device-emulator-daemon = "device_emulator_daemon:main"
+
+[tool.setuptools.packages.find]
+include = ["device_emulator*"]
+
+[tool.setuptools]
+py-modules = ["device_emulator_daemon"]

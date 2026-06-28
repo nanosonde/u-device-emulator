@@ -1,0 +1,70 @@
+controller_url: http://192.168.56.1:8080/inform
+state_file: data/device_state.json
+persist: true
+
+defaults:
+  device_ip: auto
+  interval: 30
+  aes_mode: cbc
+  firmware: "6.6.61.14919"
+  post_adopt_keepalive: true
+  post_adopt_interval: 10
+
+services:
+  discovery: both
+  # Subnet-directed broadcast that routes toward the controller. The limited
+  # broadcast 255.255.255.255 can egress the wrong NIC on a multi-homed host.
+  discovery_target: 192.168.56.255
+  # Bind the announce socket to the device's host-facing source IP. If omitted,
+  # the daemon defaults to the first device's non-loopback local_ip.
+  # discovery_bind_ip: 192.168.56.3
+  # 0x02 = adoptable/reset-style (pair with per-device handshake_mode so the
+  # controller offers Adopt). 0x06 = managed ("hold reset to adopt").
+  discovery_packet_type: 0x02
+  stun: true
+  stun_server: true
+  ssh: true
+  ssh_user: device
+  ssh_password: device
+  health_ports: "80,8080,443"
+
+# Topology: declare physical connections between emulated devices.
+# Each entry says which device connects upward to which parent, and on which ports.
+# For each child the daemon emits a self-reported `lldp_table` neighbor + a top-level
+# `uplink` port-name string + a matching `if_table` entry carrying `uplink_mac`. The
+# controller copies that into the child's stored `uplink` object and draws the link
+# (it does NOT use real on-the-wire LLDP). See doc/DEVICE_PROTOCOL.md §5.7.
+# Result: the topology view renders the correct device tree (Gateway → Switch → AP).
+# All references can be device names or MAC addresses.
+topology:
+  - device: lab-switch-01
+    uplink_device: lab-gw-01
+    uplink_port: 2          # port index on the gateway (LAN port)
+    local_port: 1           # port index on the switch (its uplink port)
+  - device: lab-ap-01
+    uplink_device: lab-switch-01
+    uplink_port: 5          # port on the switch where the AP is plugged in
+    local_port: 1           # AP uplink port (its eth0)
+
+# handshake_mode makes each inform report `default: true` (factory state) so the
+# controller offers Adopt instead of filing the device under "Managed by Another
+# Console". Pairs with services.discovery_packet_type: 0x02 above.
+devices:
+  - name: lab-switch-01
+    type: switch
+    model: US24
+    mac: 02:15:6d:00:00:10
+    firmware: "6.6.61.14919"
+    handshake_mode: true
+
+  - name: lab-ap-01
+    type: access_point
+    model: U7P
+    mac: 02:15:6d:00:00:20
+    handshake_mode: true
+
+  - name: lab-gw-01
+    type: gateway
+    model: UGW3
+    mac: 02:15:6d:00:00:30
+    handshake_mode: true

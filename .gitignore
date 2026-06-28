@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+.pytest_cache/
+*.py[cod]
+*.egg-info/
+
+# Local environments
+.venv/
+venv/
+
+# Local research (must stay private)
+doc/research/
+
+# Runtime outputs
+data/*.json
+data/*.ndjson
+!data/.gitkeep
